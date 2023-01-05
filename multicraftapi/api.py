@@ -193,7 +193,13 @@ class MulticraftAPI:
         return ret
     
     def send(self, url, params):
-        r = requests.get(url, params=params, headers={"user-agent":"Chrome/42.0.2311.135 Safari/537.36 Edge/12.246"})
+        tmp = ""
+        for k, v in params.items():
+            tmp += f'&{urlencode(k)}={urlencode(str(v))}'
+        r = requests.post(url, data=tmp, headers={
+            "user-agent": "Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
+            "Content-Type": "application/x-www-form-urlencoded"
+        })
         try:
             return r.json()
         except:
