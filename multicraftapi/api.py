@@ -4,6 +4,7 @@ import hashlib
 import requests
 from urllib.parse import quote as urlencode
 
+
 class MulticraftAPI:
     _key = ''
     _url = ''
@@ -16,13 +17,15 @@ class MulticraftAPI:
         'listUsers': (),
         'findUsers': ({'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'}),
         'getUser': ('id',),
-        'updateUser': ('id', {'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'}, {'name': 'send_mail', 'default': 0}),
-        'createUser': ('name', 'email', 'password', {'name': 'lang', 'default': ''}, {'name': 'send_mail', 'default': 0}),
+        'updateUser': ('id', {'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'},
+                       {'name': 'send_mail', 'default': 0}),
+        'createUser': (
+        'name', 'email', 'password', {'name': 'lang', 'default': ''}, {'name': 'send_mail', 'default': 0}),
         'deleteUser': ('id',),
         'getUserRole': ('user_id', 'server_id'),
         'setUserRole': ('user_id', 'server_id', 'role'),
-        'getUserFtpAccess':('user_id', 'server_id'),
-        'setUserFtpAccess':('user_id', 'server_id', 'mode'),
+        'getUserFtpAccess': ('user_id', 'server_id'),
+        'setUserFtpAccess': ('user_id', 'server_id', 'mode'),
         'getUserId': ('name',),
         'validateUser': ('name', 'password'),
         'generateUserApiKey': ('user_id',),
@@ -37,7 +40,7 @@ class MulticraftAPI:
         'updatePlayer': ('id', {'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'}),
         'createPlayer': ('server_id', 'name'),
         'deletePlayer': ('id',),
-        'assignPlayerToUser':('player_id', 'user_id'),
+        'assignPlayerToUser': ('player_id', 'user_id'),
 
         # Command functions
         'listCommands': ('server_id',),
@@ -54,9 +57,15 @@ class MulticraftAPI:
         'listServersByOwner': ('user_id',),
         'getServer': ('id',),
         'updateServer': ('id', {'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'}),
-        'createServerOn': ({'name': 'daemon_id', 'default': 0}, {'name': 'no_commands', 'default': 0}, {'name': 'no_setup_script', 'default': 0}),
-        'createServer': ({'name': 'name', 'default': ''}, {'name': 'port', 'default': 0}, {'name': 'base', 'default': ''}, {'name': 'players', 'default': 0}, {'name': 'no_commands', 'default': 0}, {'name': 'no_setup_script', 'default': 0}),
-        'createAndConfigureServer': ({'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'}, {'name': 'configField', 'type': 'array'}, {'name': 'configValue', 'type': 'array'}, {'name': 'no_commands', 'default': 0}, {'name': 'no_setup_script', 'default': 0}),
+        'createServerOn': ({'name': 'daemon_id', 'default': 0}, {'name': 'no_commands', 'default': 0},
+                           {'name': 'no_setup_script', 'default': 0}),
+        'createServer': (
+        {'name': 'name', 'default': ''}, {'name': 'port', 'default': 0}, {'name': 'base', 'default': ''},
+        {'name': 'players', 'default': 0}, {'name': 'no_commands', 'default': 0},
+        {'name': 'no_setup_script', 'default': 0}),
+        'createAndConfigureServer': ({'name': 'field', 'type': 'array'}, {'name': 'value', 'type': 'array'},
+                                     {'name': 'configField', 'type': 'array'}, {'name': 'configValue', 'type': 'array'},
+                                     {'name': 'no_commands', 'default': 0}, {'name': 'no_setup_script', 'default': 0}),
         'suspendServer': ('id', {'name': 'stop', 'default': 1}),
         'resumeServer': ('id', {'name': 'start', 'default': 1}),
         'deleteServer': ('id', {'name': 'delete_dir', 'default': 'no'}),
@@ -141,7 +150,7 @@ class MulticraftAPI:
             else:
                 name = v
 
-            if  c < len(args):
+            if c < len(args):
                 value = args[c]
             elif isinstance(v, dict) and 'default' in v.keys():
                 if c >= len(args):
@@ -150,52 +159,52 @@ class MulticraftAPI:
                     value = args[c]
             else:
                 return {'success': False, 'errors': [f'"{function}()": Not enough arguments ({len(args)})'], 'data': []}
-            
+
             if isinstance(v, dict) and 'type' in v.keys():
                 if v['type'] == 'array':
                     value = json.dumps(value)
             callargs[name] = value
-        
+
         return self.call(function, callargs)
 
-    def call(self, method, params = {}):
+    def call(self, method, params={}):
 
         if not self._url:
             return {'success': False, 'errors': ['Invalid target URL'], 'data': []}
 
         if not self._key:
             return {'success': False, 'errors': ['Invalid target URL'], 'data': []}
-        
+
         url = self._url
         query = ''
         string = ''
 
         if not isinstance(params, dict):
             params = {params: params}
-        
+
         params['_MulticraftAPIMethod'] = method
         params['_MulticraftAPIUser'] = self.user
 
         for k, v in params.items():
             string += k + str(v)
             query += f'&{urlencode(k)}={urlencode(str(v))}'
-        
+
         hmac = HMAC.new(bytes(self._key, 'utf-8'), digestmod=hashlib.sha256)
         hmac.update(string.encode(encoding="UTF-8"))
         params['_MulticraftAPIKey'] = hmac.hexdigest()
-
         ret = self.send(url, params)
-        if isinstance(ret, dict) and len(ret['errors']) > 0 and ret['errors'][0] == 'Invalid API key.': # This is an old panel, use MD5 method instead
+        if isinstance(ret, dict) and len(ret['errors']) > 0 and ret['errors'][
+            0] == 'Invalid API key.':  # This is an old panel, use MD5 method instead
             md5 = hashlib.md5()
-            md5.update(self._key+"".join(params.values()))
+            md5.update(self._key + "".join(params.values()))
             params['_MulticraftAPIKey'] = md5.hexdigest()
             ret = self.send(url, params)
         return ret
-    
+
     def send(self, url, params):
         tmp = ""
         for k, v in params.items():
-            tmp += f'&{urlencode(k)}={urlencode(str(v))}'
+            tmp += f'&{k}={str(v)}'
         r = requests.post(url, data=tmp, headers={
             "user-agent": "Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
             "Content-Type": "application/x-www-form-urlencoded"
