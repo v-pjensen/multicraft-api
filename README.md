@@ -19,6 +19,9 @@ From example.py:
 	client = MulticraftAPI("http://example.com/multicraft/api.php",  "Example_Username",  "3X4MP134P1K3Y")
 
 	# Arguments: (function, *args)
+ 	
+  	# Example:   client("getServerStatus", "Daemon ID number")
+   	# So if you host your own server locally that number could be 1, or 2, etc
 	response =  client("getServerStatus",  "123456")
 
     # Response is always JSON in form {'success': <success_status>, 'errors': [<errors>], 'data':[<returned data>]}
